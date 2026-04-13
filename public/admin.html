@@ -9,19 +9,19 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg:          #0d0d0d;
-      --surface:     #141414;
-      --card:        #1b1b1b;
-      --border:      #272727;
-      --text:        #ddd0b8;
-      --text-muted:  #6a6050;
-      --accent:      #c8a96e;
-      --green:       #2e6b3f;
-      --green-h:     #3a8050;
-      --red:         #6b2e2e;
-      --red-h:       #803a3a;
-      --blue:        #2e4a6b;
-      --blue-h:      #3a5f8a;
+      --bg:          #000;
+      --surface:     #0d0d0d;
+      --card:        #111;
+      --border:      #222;
+      --text:        #fff;
+      --text-muted:  #555;
+      --accent:      #fff;
+      --green:       #1a1a1a;
+      --green-h:     #2a2a2a;
+      --red:         #1a1a1a;
+      --red-h:       #2a2a2a;
+      --blue:        #1a1a1a;
+      --blue-h:      #2a2a2a;
     }
 
     html, body { height: 100%; }
@@ -188,8 +188,8 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .card.queued  { border-left: 2px solid var(--blue-h); }
-    .card.playing { border-left: 2px solid var(--accent); box-shadow: 0 0 12px rgba(200,169,110,0.12); }
+    .card.queued  { border-left: 2px solid #333; }
+    .card.playing { border-left: 2px solid #fff; box-shadow: 0 0 12px rgba(255,255,255,0.06); }
 
     .card-text {
       font-family: Georgia, serif;
@@ -200,8 +200,7 @@
     }
 
     .card-text .i-regret {
-      color: var(--accent);
-      font-style: italic;
+      color: #888;
     }
 
     .card-meta {
@@ -231,27 +230,28 @@
 
     .btn:disabled { opacity: 0.4; cursor: default; }
 
-    .btn-approve { background: var(--green);   color: #b0e0b8; }
-    .btn-approve:not(:disabled):hover { background: var(--green-h); }
+    .btn-approve { background: #fff;            color: #000; }
+    .btn-approve:not(:disabled):hover { background: #ccc; }
 
-    .btn-reject  { background: var(--red);     color: #e0b0b0; }
-    .btn-reject:not(:disabled):hover  { background: var(--red-h); }
+    .btn-reject  { background: var(--card);    color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-reject:not(:disabled):hover  { color: #fff; border-color: #555; }
 
-    .btn-play    { background: var(--blue);    color: #b0c8e8; flex: 1; }
-    .btn-play:not(:disabled):hover    { background: var(--blue-h); }
+    .btn-play    { background: var(--card);    color: #fff; border: 1px solid var(--border); flex: 1; }
+    .btn-play:not(:disabled):hover    { background: #1a1a1a; border-color: #555; }
 
-    .btn-done    { background: #2a4a2a;        color: #8ad08a; flex: 1; }
-    .btn-done:not(:disabled):hover    { background: #345034; }
+    .btn-done    { background: #fff;           color: #000; flex: 1; }
+    .btn-done:not(:disabled):hover    { background: #ccc; }
 
-    .btn-remove  { background: var(--red);     color: #e0b0b0; }
-    .btn-remove:not(:disabled):hover  { background: var(--red-h); }
+    .btn-remove  { background: var(--card);    color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-remove:not(:disabled):hover  { color: #fff; border-color: #555; }
 
     .status-playing {
       font-size: 0.68rem;
       padding: 0.15rem 0.5rem;
       border-radius: 10px;
-      background: #1a2e40;
-      color: #5ab0e0;
+      background: #1a1a1a;
+      color: #aaa;
+      border: 1px solid #333;
       display: inline-block;
     }
 

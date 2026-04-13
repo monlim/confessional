@@ -8,13 +8,12 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg: #0a0a0a;
+      --bg: #000;
       --surface: #111;
-      --border: #2a2218;
-      --text: #e8d5a3;
-      --text-muted: #7a6d52;
-      --accent: #c8a96e;
-      --accent-dim: #3a2e1a;
+      --border: #2a2a2a;
+      --text: #fff;
+      --text-muted: #666;
+      --accent: #fff;
     }
 
     html, body {
@@ -24,7 +23,7 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: Georgia, 'Times New Roman', serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -61,7 +60,6 @@
     /* ── Form ── */
     .prompt {
       font-size: clamp(1.6rem, 5vw, 2rem);
-      font-style: italic;
       color: var(--text);
       margin-bottom: 1.25rem;
       line-height: 1.2;
@@ -74,7 +72,7 @@
       border: 1px solid var(--border);
       border-radius: 3px;
       color: var(--text);
-      font-family: Georgia, serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
       font-size: 1.05rem;
       line-height: 1.65;
       padding: 0.9rem 1rem;
@@ -90,7 +88,7 @@
     }
 
     textarea::placeholder {
-      color: #3a3020;
+      color: #444;
     }
 
     .meta-row {
@@ -122,7 +120,7 @@
       background: transparent;
       border: 1px solid var(--accent);
       color: var(--accent);
-      font-family: Georgia, serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
       font-size: 0.9rem;
       letter-spacing: 0.25em;
       text-transform: uppercase;
@@ -175,7 +173,7 @@
       background: none;
       border: none;
       color: var(--text-muted);
-      font-family: Georgia, serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
       font-size: 0.82rem;
       cursor: pointer;
       text-decoration: underline;
@@ -209,6 +207,7 @@
         rows="6"
         autocomplete="off"
         autocorrect="on"
+        autocapitalize="none"
         spellcheck="true"
       ></textarea>
 
