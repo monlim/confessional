@@ -19,7 +19,9 @@ const PORT = process.env.PORT || 3000;
 // Set PUBLIC_URL to your Railway/tunnel domain so the QR code is correct.
 const publicBase = process.env.PUBLIC_URL
   ? process.env.PUBLIC_URL.replace(/\/$/, '')
-  : `http://localhost:${PORT}`;
+  : process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : `http://localhost:${PORT}`;
 
 // ── Routes ─────────────────────────────────────────────────────────────────
 
