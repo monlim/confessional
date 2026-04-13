@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Confessional</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --border: #2a2218;
+      --text: #e8d5a3;
+      --text-muted: #7a6d52;
+      --accent: #c8a96e;
+      --accent-dim: #3a2e1a;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, 'Times New Roman', serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .header-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .header-rule {
+      width: 40px;
+      height: 1px;
+      background: var(--accent);
+      opacity: 0.35;
+      margin: 1rem auto;
+    }
+
+    /* ── Form ── */
+    .prompt {
+      font-size: clamp(1.6rem, 5vw, 2rem);
+      font-style: italic;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+      line-height: 1.2;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      font-family: Georgia, serif;
+      font-size: 1.05rem;
+      line-height: 1.65;
+      padding: 0.9rem 1rem;
+      resize: none;
+      min-height: 150px;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea::placeholder {
+      color: #3a3020;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0.4rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .char-count {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .char-count.over {
+      color: #a05050;
+    }
+
+    .error {
+      font-size: 0.85rem;
+      color: #b06060;
+      margin-bottom: 0.8rem;
+      min-height: 1.2em;
+    }
+
+    .btn-confess {
+      display: block;
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      padding: 0.95rem;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background 0.2s, color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-confess:hover, .btn-confess:active {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-confess:disabled {
+      opacity: 0.35;
+      cursor: default;
+      background: transparent;
+      color: var(--accent);
+    }
+
+    /* ── Success ── */
+    .success-view {
+      display: none;
+      text-align: center;
+      animation: rise 0.5s ease forwards;
+    }
+
+    .success-glyph {
+      font-size: 2.4rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .success-title {
+      font-size: 1.35rem;
+      color: var(--text);
+      margin-bottom: 0.6rem;
+    }
+
+    .success-sub {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    .btn-again {
+      margin-top: 2.5rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: Georgia, serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .btn-again:hover { color: var(--accent); }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Form view -->
+    <div id="formView">
+      <div class="header">
+        <div class="header-label">Confessional</div>
+        <div class="header-rule"></div>
+      </div>
+
+      <div class="prompt">I regret&hellip;</div>
+
+      <textarea
+        id="text"
+        placeholder="complete your confession"
+        maxlength="500"
+        rows="6"
+        autocomplete="off"
+        autocorrect="on"
+        spellcheck="true"
+      ></textarea>
+
+      <div class="meta-row">
+        <span class="char-count" id="charCount">0 / 500</span>
+      </div>
+
+      <div class="error" id="error"></div>
+
+      <button class="btn-confess" id="submitBtn">Confess</button>
+    </div>
+
+    <!-- Success view -->
+    <div class="success-view" id="successView">
+      <div class="success-glyph">&#10013;</div>
+      <h2 class="success-title">Your confession has been received.</h2>
+      <p class="success-sub">It will be considered for the performance.</p>
+      <button class="btn-again" onclick="reset()">Confess again</button>
+    </div>
+
+  </div>
+
+  <script>
+    const textarea   = document.getElementById('text');
+    const charCount  = document.getElementById('charCount');
+    const submitBtn  = document.getElementById('submitBtn');
+    const errorEl    = document.getElementById('error');
+    const formView   = document.getElementById('formView');
+    const successView = document.getElementById('successView');
+
+    textarea.addEventListener('input', () => {
+      const n = textarea.value.length;
+      charCount.textContent = `${n} / 500`;
+      charCount.classList.toggle('over', n >= 490);
+    });
+
+    submitBtn.addEventListener('click', async () => {
+      const text = textarea.value.trim();
+      if (!text) { showError('Please complete your confession.'); return; }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending\u2026';
+      errorEl.textContent = '';
+
+      try {
+        const res  = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          formView.style.display = 'none';
+          successView.style.display = 'block';
+        } else {
+          showError(data.error || 'Something went wrong.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Confess';
+        }
+      } catch {
+        showError('Connection lost. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confess';
+      }
+    });
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+    }
+
+    function reset() {
+      textarea.value = '';
+      charCount.textContent = '0 / 500';
+      charCount.classList.remove('over');
+      errorEl.textContent = '';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Confess';
+      successView.style.display = 'none';
+      formView.style.display = 'block';
+      textarea.focus();
+    }
+  </script>
+</body>
+</html>

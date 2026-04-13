@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confessional — Admin</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:          #0d0d0d;
+      --surface:     #141414;
+      --card:        #1b1b1b;
+      --border:      #272727;
+      --text:        #ddd0b8;
+      --text-muted:  #6a6050;
+      --accent:      #c8a96e;
+      --green:       #2e6b3f;
+      --green-h:     #3a8050;
+      --red:         #6b2e2e;
+      --red-h:       #803a3a;
+      --blue:        #2e4a6b;
+      --blue-h:      #3a5f8a;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.6rem 1.2rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-family: Georgia, serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--accent);
+      flex: 1;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .settings-row label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    select, input[type=range] {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 3px;
+      padding: 0.25rem 0.4rem;
+      font-size: 0.78rem;
+      outline: none;
+    }
+
+    select { cursor: pointer; max-width: 160px; }
+
+    input[type=range] {
+      width: 80px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    .rate-val {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      min-width: 30px;
+    }
+
+    .btn-topbar {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 3px;
+      padding: 0.28rem 0.7rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-topbar:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-topbar.danger:hover { border-color: #a06060; color: #c07070; }
+
+    /* ── Main panels ── */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+
+    .panel:last-child { border-right: none; }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-size: 0.68rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 0.1rem 0.45rem;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .panel-body::-webkit-scrollbar { width: 4px; }
+    .panel-body::-webkit-scrollbar-track { background: transparent; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .empty {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.75rem 0.85rem;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card.queued  { border-left: 2px solid var(--blue-h); }
+    .card.playing { border-left: 2px solid var(--accent); box-shadow: 0 0 12px rgba(200,169,110,0.12); }
+
+    .card-text {
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text);
+      margin-bottom: 0.6rem;
+    }
+
+    .card-text .i-regret {
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    .card-meta {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-bottom: 0.65rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      border: none;
+      border-radius: 3px;
+      padding: 0.3rem 0.65rem;
+      font-size: 0.75rem;
+      font-family: -apple-system, sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s, opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn:disabled { opacity: 0.4; cursor: default; }
+
+    .btn-approve { background: var(--green);   color: #b0e0b8; }
+    .btn-approve:not(:disabled):hover { background: var(--green-h); }
+
+    .btn-reject  { background: var(--red);     color: #e0b0b0; }
+    .btn-reject:not(:disabled):hover  { background: var(--red-h); }
+
+    .btn-play    { background: var(--blue);    color: #b0c8e8; flex: 1; }
+    .btn-play:not(:disabled):hover    { background: var(--blue-h); }
+
+    .btn-done    { background: #2a4a2a;        color: #8ad08a; flex: 1; }
+    .btn-done:not(:disabled):hover    { background: #345034; }
+
+    .btn-remove  { background: var(--red);     color: #e0b0b0; }
+    .btn-remove:not(:disabled):hover  { background: var(--red-h); }
+
+    .status-playing {
+      font-size: 0.68rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      background: #1a2e40;
+      color: #5ab0e0;
+      display: inline-block;
+    }
+
+    .queue-pos {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.1rem 0.35rem;
+      display: inline-block;
+      margin-bottom: 0.4rem;
+    }
+
+    /* ── QR Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2rem;
+      text-align: center;
+      max-width: 340px;
+      width: 90%;
+    }
+
+    .modal h2 {
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1.2rem;
+    }
+
+    .modal img { width: 240px; height: 240px; border-radius: 4px; }
+
+    .modal-url {
+      margin-top: 1rem;
+      font-size: 0.82rem;
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    .modal-close {
+      margin-top: 1.2rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 3px;
+      padding: 0.35rem 1rem;
+      cursor: pointer;
+      font-size: 0.78rem;
+    }
+    .modal-close:hover { border-color: var(--accent); color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-title">Confessional</div>
+
+  <div class="settings-row">
+    <label>Voice</label>
+    <select id="voiceSelect"><option value="">Loading…</option></select>
+
+    <label>Speed</label>
+    <input type="range" id="rateSlider" min="0.5" max="1.5" step="0.05" value="0.85">
+    <span class="rate-val" id="rateVal">0.85×</span>
+
+    <button class="btn-topbar danger" onclick="clearDisplay()">Clear Display</button>
+    <button class="btn-topbar" onclick="showQR()">QR Code</button>
+  </div>
+</div>
+
+<!-- Panels -->
+<div class="panels">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Incoming</span>
+      <span class="badge" id="pendingBadge">0</span>
+    </div>
+    <div class="panel-body" id="pendingList">
+      <div class="empty">Waiting for confessions&hellip;</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Queue</span>
+      <span class="badge" id="queueBadge">0</span>
+    </div>
+    <div class="panel-body" id="queueList">
+      <div class="empty">No approved confessions yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- QR Modal -->
+<div class="modal-overlay" id="qrModal" onclick="closeQR(event)">
+  <div class="modal">
+    <h2>Audience Link</h2>
+    <img id="qrImg" src="" alt="QR Code">
+    <div class="modal-url" id="qrUrl"></div>
+    <button class="modal-close" onclick="closeQRBtn()">Close</button>
+  </div>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  const pending = new Map();
+  const queue   = [];
+  let currentlyPlayingId = null;
+  let currentUtterance   = null;
+
+  // ── Socket ─────────────────────────────────────────────────────────────────
+  const socket = io();
+  socket.emit('join_admin');
+
+  socket.on('initial_state', ({ pending: p, queue: q }) => {
+    p.forEach(c => pending.set(c.id, c));
+    q.forEach(c => queue.push(c));
+    renderPending();
+    renderQueue();
+  });
+
+  socket.on('new_confession', (c) => {
+    pending.set(c.id, c);
+    renderPending();
+    flashTitle();
+  });
+
+  socket.on('confession_updated', ({ id, status }) => {
+    if (pending.has(id)) {
+      if (status === 'queued') {
+        pending.delete(id);
+      } else {
+        pending.get(id).status = status;
+      }
+      renderPending();
+    }
+
+    const qi = queue.findIndex(c => c.id === id);
+    if (qi > -1) {
+      if (status === 'done' || status === 'removed') {
+        queue.splice(qi, 1);
+        if (currentlyPlayingId === id) stopSpeech();
+      } else {
+        queue[qi].status = status;
+      }
+      renderQueue();
+    }
+  });
+
+  socket.on('queue_updated', (q) => {
+    queue.length = 0;
+    q.forEach(c => queue.push(c));
+    renderQueue();
+  });
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function renderPending() {
+    const el = document.getElementById('pendingList');
+    const items = [...pending.values()].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    document.getElementById('pendingBadge').textContent = items.length;
+
+    if (items.length === 0) {
+      el.innerHTML = '<div class="empty">Waiting for confessions&hellip;</div>';
+      return;
+    }
+    el.innerHTML = '';
+    items.forEach(c => el.appendChild(createPendingCard(c)));
+  }
+
+  function renderQueue() {
+    const el = document.getElementById('queueList');
+    document.getElementById('queueBadge').textContent = queue.length;
+
+    if (queue.length === 0) {
+      el.innerHTML = '<div class="empty">No approved confessions yet.</div>';
+      return;
+    }
+    el.innerHTML = '';
+    queue.forEach((c, i) => el.appendChild(createQueueCard(c, i + 1)));
+  }
+
+  function createPendingCard(c) {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.id = `pending-${c.id}`;
+    const time = new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `
+      <div class="card-text"><span class="i-regret">I regret</span> ${escHtml(c.text)}</div>
+      <div class="card-meta">${time}</div>
+      <div class="card-actions">
+        <button class="btn btn-approve" onclick="approve('${c.id}')">Approve</button>
+        <button class="btn btn-reject"  onclick="reject('${c.id}')">Reject</button>
+      </div>`;
+    return div;
+  }
+
+  function createQueueCard(c, pos) {
+    const div = document.createElement('div');
+    const isPlaying = currentlyPlayingId === c.id;
+    div.className = 'card ' + (isPlaying ? 'playing' : 'queued');
+    div.id = `queue-${c.id}`;
+    div.innerHTML = `
+      <div class="queue-pos">#${pos}</div>
+      <div class="card-text"><span class="i-regret">I regret</span> ${escHtml(c.text)}</div>
+      <div class="card-actions">
+        ${isPlaying
+          ? `<span class="status-playing">&#9654; Speaking</span>
+             <button class="btn btn-done"   onclick="markDone('${c.id}')">&#10003; Done</button>
+             <button class="btn btn-remove" onclick="remove('${c.id}')">&#10005;</button>`
+          : `<button class="btn btn-play"   onclick="playAndDisplay('${c.id}')">&#9654; Play &amp; Display</button>
+             <button class="btn btn-remove" onclick="remove('${c.id}')">&#10005;</button>`
+        }
+      </div>`;
+    return div;
+  }
+
+  // ── Actions ────────────────────────────────────────────────────────────────
+  function approve(id) {
+    const card = document.getElementById(`pending-${id}`);
+    if (card) card.querySelectorAll('.btn').forEach(b => b.disabled = true);
+    apiFetch(`/api/approve/${id}`, 'POST');
+  }
+
+  function reject(id) {
+    pending.delete(id);
+    renderPending();
+    apiFetch(`/api/reject/${id}`, 'POST');
+  }
+
+  function playAndDisplay(id) {
+    const c = queue.find(q => q.id === id);
+    if (!c) return;
+
+    stopSpeech();
+    currentlyPlayingId = id;
+    renderQueue();
+
+    // Push text to display screen
+    apiFetch(`/api/display/${id}`, 'POST');
+
+    // Speak via Web Speech API
+    const utterance = new SpeechSynthesisUtterance(c.fullText);
+    utterance.voice  = getSelectedVoice();
+    utterance.rate   = parseFloat(document.getElementById('rateSlider').value);
+    utterance.onend  = () => {
+      // Leave in "Speaking" state — admin clicks Done when ready
+    };
+    currentUtterance = utterance;
+    speechSynthesis.speak(utterance);
+  }
+
+  function markDone(id) {
+    stopSpeech();
+    apiFetch(`/api/done/${id}`, 'POST');
+  }
+
+  function remove(id) {
+    if (currentlyPlayingId === id) stopSpeech();
+    apiFetch(`/api/remove/${id}`, 'POST');
+  }
+
+  function stopSpeech() {
+    speechSynthesis.cancel();
+    currentlyPlayingId = null;
+    currentUtterance   = null;
+  }
+
+  function clearDisplay() {
+    apiFetch('/api/clear-display', 'POST');
+  }
+
+  async function apiFetch(url, method, body) {
+    try {
+      await fetch(url, {
+        method,
+        headers: body ? { 'Content-Type': 'application/json' } : {},
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // ── Web Speech API voices ──────────────────────────────────────────────────
+  let availableVoices = [];
+
+  function populateVoices() {
+    availableVoices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+    const sel = document.getElementById('voiceSelect');
+    if (availableVoices.length === 0) return;
+
+    sel.innerHTML = '';
+    const preferred = ['Samantha', 'Daniel', 'Karen', 'Moira', 'Alex', 'Victoria'];
+    // Put preferred voices first, then sort the rest alphabetically
+    const sorted = [
+      ...availableVoices.filter(v => preferred.includes(v.name)),
+      ...availableVoices.filter(v => !preferred.includes(v.name)).sort((a, b) => a.name.localeCompare(b.name)),
+    ];
+    sorted.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = `${v.name} (${v.lang})`;
+      if (v.name === 'Samantha') opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function getSelectedVoice() {
+    const name = document.getElementById('voiceSelect').value;
+    return availableVoices.find(v => v.name === name) || null;
+  }
+
+  speechSynthesis.onvoiceschanged = populateVoices;
+  populateVoices();
+
+  // ── Rate slider ────────────────────────────────────────────────────────────
+  document.getElementById('rateSlider').addEventListener('input', function () {
+    document.getElementById('rateVal').textContent = `${parseFloat(this.value).toFixed(2)}×`;
+  });
+
+  // ── QR Modal ───────────────────────────────────────────────────────────────
+  async function showQR() {
+    const res  = await fetch('/api/qr');
+    const data = await res.json();
+    document.getElementById('qrImg').src = data.qr;
+    document.getElementById('qrUrl').textContent = data.url;
+    document.getElementById('qrModal').classList.add('open');
+  }
+
+  function closeQR(e) {
+    if (e.target === document.getElementById('qrModal')) closeQRBtn();
+  }
+
+  function closeQRBtn() {
+    document.getElementById('qrModal').classList.remove('open');
+  }
+
+  // ── Title flash ────────────────────────────────────────────────────────────
+  let flashInterval = null;
+  function flashTitle() {
+    if (flashInterval) return;
+    let on = true;
+    flashInterval = setInterval(() => {
+      document.title = on ? '★ New Confession — Admin' : 'Confessional — Admin';
+      on = !on;
+    }, 600);
+    setTimeout(() => {
+      clearInterval(flashInterval);
+      flashInterval = null;
+      document.title = 'Confessional — Admin';
+    }, 4000);
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>

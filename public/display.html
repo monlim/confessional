@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confessional — Display</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stage {
+      width: 100%;
+      max-width: 1100px;
+      padding: 5vw 8vw;
+      text-align: center;
+    }
+
+    .confession {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+      pointer-events: none;
+    }
+
+    .confession.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .confession.hidden {
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .rule {
+      width: 50px;
+      height: 1px;
+      background: #c8a96e;
+      margin: 0 auto 2.5vw;
+      opacity: 0;
+      transition: opacity 0.9s ease 0.3s;
+    }
+
+    .confession.visible .rule {
+      opacity: 0.4;
+    }
+
+    .confession.hidden .rule {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .text {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(1.8rem, 4.5vw, 4rem);
+      line-height: 1.45;
+      color: #e8d5a3;
+      font-style: italic;
+    }
+
+    .text .i-regret {
+      color: #c8a96e;
+    }
+
+    /* Cursor blink when idle */
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: #c8a96e;
+      opacity: 0;
+      vertical-align: middle;
+      margin-left: 4px;
+      animation: blink 1.4s step-end infinite;
+      transition: opacity 0.5s;
+    }
+
+    .cursor.visible { opacity: 0.5; }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.5; }
+      50%       { opacity: 0; }
+    }
+
+    /* Subtle vignette */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
+      pointer-events: none;
+    }
+
+    /* Idle state — faint watermark */
+    .idle-mark {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: Georgia, serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: #1e1a14;
+      transition: opacity 0.8s;
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stage">
+    <div class="confession" id="confession">
+      <div class="rule"></div>
+      <div class="text" id="confessionText"></div>
+    </div>
+  </div>
+
+  <div class="idle-mark">Confessional</div>
+  <span class="cursor" id="cursor"></span>
+
+  <script>
+    const socket = io();
+    socket.emit('join_display');
+
+    const confessionEl = document.getElementById('confession');
+    const textEl       = document.getElementById('confessionText');
+    const cursor       = document.getElementById('cursor');
+
+    let hideTimeout = null;
+    let showing = false;
+
+    socket.on('show_confession', ({ text }) => {
+      clearTimeout(hideTimeout);
+
+      // Build HTML: highlight "I regret" prefix
+      const PREFIX = 'I regret ';
+      let html;
+      if (text.toLowerCase().startsWith('i regret ')) {
+        const rest = text.slice(PREFIX.length);
+        html = `<span class="i-regret">I regret</span> ${escHtml(rest)}`;
+      } else {
+        html = escHtml(text);
+      }
+
+      if (showing) {
+        // Already showing — fade out first, then swap
+        confessionEl.classList.add('hidden');
+        confessionEl.classList.remove('visible');
+        setTimeout(() => {
+          textEl.innerHTML = html;
+          confessionEl.classList.remove('hidden');
+          void confessionEl.offsetWidth; // reflow
+          confessionEl.classList.add('visible');
+        }, 650);
+      } else {
+        textEl.innerHTML = html;
+        void confessionEl.offsetWidth;
+        confessionEl.classList.remove('hidden');
+        confessionEl.classList.add('visible');
+        showing = true;
+        cursor.classList.remove('visible');
+      }
+    });
+
+    socket.on('clear_confession', () => {
+      if (!showing) return;
+      confessionEl.classList.add('hidden');
+      confessionEl.classList.remove('visible');
+      showing = false;
+      hideTimeout = setTimeout(() => {
+        textEl.innerHTML = '';
+        cursor.classList.add('visible');
+      }, 700);
+    });
+
+    socket.on('disconnect', () => {
+      // Attempt silent reconnect — socket.io handles this automatically
+    });
+
+    // Show idle cursor initially
+    cursor.classList.add('visible');
+
+    function escHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
