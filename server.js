@@ -167,7 +167,7 @@ io.on('connection', (socket) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\nConfessional running:`);
-  console.log(`  Admin    → http://localhost:${PORT}`);
-  console.log(`  Display  → http://localhost:${PORT}/display`);
+  console.log(`  Admin    → ${publicBase}`);
+  console.log(`  Display  → ${publicBase}/display`);
   console.log(`  Audience → ${publicBase}/confess\n`);
 });
