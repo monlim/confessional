@@ -25,14 +25,6 @@ const publicBase = process.env.PUBLIC_URL
 
 // ── Routes ─────────────────────────────────────────────────────────────────
 
-// Admin is the root
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-// Audience URL — encoded in QR code
-app.get('/confess', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('/display', (req, res) => res.sendFile(path.join(__dirname, 'public', 'display.html')));
-// Static assets (socket.io client, etc.)
-app.use(express.static(path.join(__dirname, 'public')));
-
 // Temporary debug endpoint — remove after confirming env vars
 app.get('/api/debug', (_req, res) => {
   res.json({
@@ -43,6 +35,14 @@ app.get('/api/debug', (_req, res) => {
     PORT,
   });
 });
+
+// Admin is the root
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+// Audience URL — encoded in QR code
+app.get('/confess', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/display', (req, res) => res.sendFile(path.join(__dirname, 'public', 'display.html')));
+// Static assets (socket.io client, etc.)
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/qr', async (req, res) => {
   const url = `${publicBase}/confess`;
