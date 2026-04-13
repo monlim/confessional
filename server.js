@@ -33,6 +33,17 @@ app.get('/display', (req, res) => res.sendFile(path.join(__dirname, 'public', 'd
 // Static assets (socket.io client, etc.)
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Temporary debug endpoint — remove after confirming env vars
+app.get('/api/debug', (_req, res) => {
+  res.json({
+    PUBLIC_URL: process.env.PUBLIC_URL || null,
+    RAILWAY_PUBLIC_DOMAIN: process.env.RAILWAY_PUBLIC_DOMAIN || null,
+    RAILWAY_STATIC_URL: process.env.RAILWAY_STATIC_URL || null,
+    publicBase,
+    PORT,
+  });
+});
+
 app.get('/api/qr', async (req, res) => {
   const url = `${publicBase}/confess`;
   try {
